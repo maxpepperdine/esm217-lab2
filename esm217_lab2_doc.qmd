@@ -1,0 +1,181 @@
+---
+title: "ESM 217 Lab 2: Quantifying Environment"
+author: "Maxwell Pepperdine"
+date: last-modified
+execute: 
+  eval: true
+  warning: false
+  message: false
+format: 
+  html:
+    toc: true
+    code-fold: true
+    embed-resources: true
+    code-summary: "Show the code"
+    theme: flatly
+editor: visual
+---
+
+```{r}
+# clear environment
+rm(list = ls())
+```
+
+## Load packages
+
+```{r, echo = TRUE, output = FALSE}
+library(tidyverse)
+library(here)
+library(lubridate)
+library(doBy)
+library(mosaic)
+library(car)
+library(sf)
+library(sjPlot)
+library(tmap)
+```
+
+## Part 1: Analyzing mean temperature (°C) by district in Peru
+
+To process, visualize and export temperature data in Peruvian districts, we used a workflow in Google Earth Engine (GEE) provided by Dr. Andy MacDonald. The data was then read into R, merged with the Peru district spatial data, and then mapped by district. 
+
+#### Load data
+
+```{r, echo = TRUE, output = FALSE}
+# read in Peru district file as a spatial dataset:
+Peru_dist <- read_sf(here("data/per_admbnda_adm3_2018.shp")) # change file path for your context
+head(Peru_dist)
+
+# read in temperature data for all of Peru:
+Peru_dist_temp <- read.csv(here("data/Peru_Temperature.csv")) 
+head(Peru_dist_temp)
+# pad with leading 0 to match IDDIST in shapefile
+Peru_dist_temp$IDDIST <- str_pad(Peru_dist_temp$IDDIST, 6, pad = "0") 
+Peru_dist_temp$system.index <- NULL
+```
+
+#### Merge temperature and spatial data & make a simple map
+
+```{r}
+#| label: fig-temp1
+#| fig-cap: "Mean temperature (°C) by district in Peru."
+
+# merge temperature and spatial data:
+Peru_dist_temp_merge <- merge(Peru_dist, Peru_dist_temp, by=c("IDDIST"), 
+                              all.x=T, all.y=T, 
+                              silent=T)
+# head(Peru_dist_temp_merge)
+
+# make a simple map in R:
+plot(Peru_dist_temp_merge["mean"], nbreaks=20, breaks="kmeans", lwd=0.1)
+```
+
+#### Now make the map prettier using `tmap`
+
+```{r}
+#| label: fig-temp2
+#| fig-cap: "Mean temperature (°C) by district in Peru ('prettier' version)."
+
+tm_graticules(lines = FALSE) + 
+tm_shape(Peru_dist_temp_merge) + 
+  tm_fill(col = "mean", style = "cont",
+          palette = "viridis", 
+          title = "Temperature (°C)", 
+          showNA = FALSE) + 
+  tm_compass(position = c("0.01", "0.87"), 
+             size = 1.5) + 
+  tm_scale_bar(position = c("left", "bottom"), 
+               breaks = c(0, 200, 400)) +
+  tm_layout(legend.outside = TRUE, 
+            main.title = "Mean temperature (°C) by district in Peru", 
+            main.title.size = 1)
+```
+
+## Part 2: Analyzing mean precipitation (m) by district in Peru
+
+For the extended part of this lab, I chose to reproduce the same workflow but with a different band from the ERA5 data: precipitation (`total_precipitation_sum`). Again, the data was processed in GEE, read into R, merged with the Peru district spatial data, and then mapped by district.
+
+#### Load data
+
+```{r, echo = TRUE, output = FALSE}
+# read in precipitation data for all of Peru:
+Peru_dist_precip <- read.csv(here("data/Peru_Precipitation.csv"))
+head(Peru_dist_precip)
+# pad with leading 0 to match IDDIST in shapefile
+Peru_dist_precip$IDDIST <- str_pad(Peru_dist_precip$IDDIST, 6, pad = "0")
+Peru_dist_precip$system.index <- NULL
+```
+
+#### Merge precipitation and spatial data & make a simple map
+
+```{r}
+#| label: fig-precip1
+#| fig-cap: "Mean precipitation (m) by district in Peru."
+
+# merge precipitation and spatial data:
+Peru_dist_precip_merge <- merge(Peru_dist, Peru_dist_precip, 
+                                by=c("IDDIST"), all.x=T, all.y=T)
+# head(Peru_dist_precip_merge)
+
+# make a simple map in R:
+plot(Peru_dist_precip_merge["mean"], nbreaks=20, breaks="kmeans", lwd=0.1)
+```
+
+#### Now make the map prettier using `tmap`
+
+```{r}
+#| label: fig-precip2
+#| fig-cap: "Mean precipitation (m) by district in Peru ('prettier' version)."
+
+tm_graticules(lines = FALSE) + 
+tm_shape(Peru_dist_precip_merge) + 
+  tm_fill(col = "mean", style = "cont",
+          palette = "viridis", 
+          title = "Precipitation (m)", 
+          showNA = FALSE) + 
+  tm_compass(position = c("0.01", "0.87"), 
+             size = 1.5) + 
+  tm_scale_bar(position = c("left", "bottom"), 
+               breaks = c(0, 200, 400)) +
+  tm_layout(legend.outside = TRUE, 
+            main.title = "Mean precipitation (m) by district in Peru", 
+            main.title.size = 1)
+```
+
+## Combine both maps into one figure using `tmap`
+
+```{r}
+#| label: fig-combined
+#| fig-cap: "(A) Mean temperature (°C) and (B) mean precipitation (m) by district in Peru."
+
+temp_map <- tm_shape(Peru_dist_temp_merge) + 
+  tm_fill(col = "mean", style = "cont",
+          palette = "viridis", 
+          title = "Temperature (°C)", 
+          showNA = FALSE) + 
+  tm_compass(position = c("0.01", "0.87"), 
+             size = 1.5) + 
+  tm_scale_bar(position = c("left", "bottom"), 
+               breaks = c(0, 200, 400)) +
+  tm_layout(legend.outside = TRUE, 
+            main.title = "A")
+
+precip_map <- tm_shape(Peru_dist_precip_merge) +
+  tm_fill(col = "mean", style = "cont",
+          palette = "viridis", 
+          title = "Precipitation (m)", 
+          showNA = FALSE) + 
+  tm_compass(position = c("0.01", "0.87"), 
+             size = 1.5) + 
+  tm_scale_bar(position = c("left", "bottom"), 
+               breaks = c(0, 200, 400)) +
+  tm_layout(legend.outside = TRUE, 
+            main.title = "B")
+
+tmap_arrange(temp_map, precip_map)
+```
+
+
+
+
+
