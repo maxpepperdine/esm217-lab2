@@ -78,9 +78,11 @@ plot(Peru_dist_temp_merge["mean"], nbreaks=20, breaks="kmeans", lwd=0.1)
 
 tm_graticules(lines = FALSE) + 
 tm_shape(Peru_dist_temp_merge) + 
-  tm_fill(col = "mean", style = "cont",
+  tm_polygons(col = "mean", style = "cont",
           palette = "viridis", 
           title = "Temperature (°C)", 
+          border.col = "black", border.alpha = 0.5,
+          lwd = 0.1,
           showNA = FALSE) + 
   tm_compass(position = c("0.01", "0.87"), 
              size = 1.5) + 
@@ -129,9 +131,11 @@ plot(Peru_dist_precip_merge["mean"], nbreaks=20, breaks="kmeans", lwd=0.1)
 
 tm_graticules(lines = FALSE) + 
 tm_shape(Peru_dist_precip_merge) + 
-  tm_fill(col = "mean", style = "cont",
+  tm_polygons(col = "mean", style = "cont",
           palette = "viridis", 
           title = "Precipitation (m)", 
+          border.col = "black", border.alpha = 0.5,
+          lwd = 0.1,
           showNA = FALSE) + 
   tm_compass(position = c("0.01", "0.87"), 
              size = 1.5) + 
@@ -149,9 +153,11 @@ tm_shape(Peru_dist_precip_merge) +
 #| fig-cap: "(A) Mean temperature (°C) and (B) mean precipitation (m) by district in Peru."
 
 temp_map <- tm_shape(Peru_dist_temp_merge) + 
-  tm_fill(col = "mean", style = "cont",
+  tm_polygons(col = "mean", style = "cont",
           palette = "viridis", 
           title = "Temperature (°C)", 
+          border.col = "black", border.alpha = 0.5,
+          lwd = 0.1,
           showNA = FALSE) + 
   tm_compass(position = c("0.01", "0.87"), 
              size = 1.5) + 
@@ -161,9 +167,11 @@ temp_map <- tm_shape(Peru_dist_temp_merge) +
             main.title = "A")
 
 precip_map <- tm_shape(Peru_dist_precip_merge) +
-  tm_fill(col = "mean", style = "cont",
+  tm_polygons(col = "mean", style = "cont",
           palette = "viridis", 
           title = "Precipitation (m)", 
+          border.col = "black", border.alpha = 0.5,
+          lwd = 0.1,
           showNA = FALSE) + 
   tm_compass(position = c("0.01", "0.87"), 
              size = 1.5) + 
